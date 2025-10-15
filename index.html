@@ -1,0 +1,660 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>CHIMUELOBAR- Menú Virtual</title>
+<style>
+  /* --- Reset + base --- */
+  :root{
+    --bg:#050505;
+    --panel:#0b0b0b;
+    --text:#e9fbe9;
+    --muted:#9aa59a;
+    --green:#0ee06a;
+    --neon:#29ff6a;
+    --accent:#00ff7a;
+    --glass: rgba(255,255,255,0.03);
+    --card-radius:14px;
+    --shadow: 0 8px 24px rgba(0,0,0,0.6);
+    --whatsapp: #25D366;
+  }
+  *{box-sizing:border-box}
+  html,body{height:100%}
+  body{
+    margin:0;
+    font-family:Inter, "Helvetica Neue", Arial, sans-serif;
+    background: radial-gradient(ellipse at center, rgba(0,0,0,0.6) 0%, rgba(0,0,0,1) 60%), var(--bg);
+    color:var(--text);
+    -webkit-font-smoothing:antialiased;
+    -moz-osx-font-smoothing:grayscale;
+    overflow-y:auto;
+  }
+
+  /* --- Animated dragon eyes background (CSS-only) --- */
+  .bg-eyes{
+    position:fixed;
+    inset:0;
+    z-index:-2;
+    pointer-events:none;
+    background: radial-gradient(circle at 20% 30%, rgba(10,60,20,0.06) 0%, transparent 20%),
+                radial-gradient(circle at 80% 70%, rgba(10,60,20,0.04) 0%, transparent 25%);
+    overflow:hidden;
+  }
+  .eye{
+    position:absolute;
+    width:60vmax;
+    height:60vmax;
+    left:50%;
+    top:45%;
+    transform:translate(-50%,-50%);
+    filter: blur(28px);
+    opacity:0.16;
+    mix-blend-mode:screen;
+    animation: gentle-swell 6s ease-in-out infinite;
+    background:
+      radial-gradient(circle at 48% 40%, rgba(45,255,120,0.25) 0 6%, rgba(45,255,120,0.06) 8%,
+                      rgba(0,0,0,0) 9%),
+      radial-gradient(circle at 52% 60%, rgba(12,120,40,0.08) 0 9%, rgba(0,0,0,0) 12%),
+      linear-gradient(90deg, rgba(0,0,0,0), rgba(0,0,0,0.0));
+  }
+  /* two subtle pupils/glows */
+  .eye::before, .eye::after{
+    content:"";
+    position:absolute;
+    border-radius:50%;
+    filter: blur(6px);
+    mix-blend-mode:screen;
+  }
+  .eye::before{
+    width:16%;
+    height:16%;
+    left:36%;
+    top:38%;
+    background: radial-gradient(circle, rgba(40,255,140,0.95) 0 35%, rgba(40,255,140,0.12) 40%, rgba(0,0,0,0) 60%);
+    animation: pupil-flick 2.8s ease-in-out infinite;
+  }
+  .eye::after{
+    width:10%;
+    height:10%;
+    left:56%;
+    top:44%;
+    background: radial-gradient(circle, rgba(10,200,80,0.85) 0 35%, rgba(10,200,80,0.08) 45%, rgba(0,0,0,0) 70%);
+    animation: pupil-flick 3.4s ease-in-out infinite;
+  }
+  @keyframes gentle-swell{
+    0%{ transform:translate(-50%,-50%) scale(0.98); opacity:0.14 }
+    50%{ transform:translate(-50%,-50%) scale(1.02); opacity:0.18 }
+    100%{ transform:translate(-50%,-50%) scale(0.98); opacity:0.14 }
+  }
+  @keyframes pupil-flick{
+    0%{ transform:translateY(0) }
+    30%{ transform:translateY(-2%) }
+    60%{ transform:translateY(1%) }
+    100%{ transform:translateY(0) }
+  }
+
+  /* --- Layout --- */
+  header{
+    position:sticky;
+    top:0;
+    z-index:10;
+    background:linear-gradient(180deg, rgba(0,0,0,0.65), rgba(0,0,0,0.35));
+    backdrop-filter: blur(6px);
+    padding:.9rem;
+    display:flex;
+    align-items:center;
+    gap:.75rem;
+    border-bottom:1px solid rgba(255,255,255,0.03);
+  }
+  .logo{
+    display:flex;
+    align-items:center;
+    gap:.6rem;
+  }
+  .logo .mark{
+    width:44px;
+    height:44px;
+    border-radius:10px;
+    background:linear-gradient(135deg,var(--neon), var(--green));
+    box-shadow:0 6px 18px rgba(46,255,140,0.12), inset 0 -6px 14px rgba(0,0,0,0.25);
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    font-weight:700;
+    color:#061203;
+    font-size:20px;
+  }
+  .brand{
+    line-height:1;
+  }
+  .brand h1{margin:0;font-size:15px;letter-spacing:0.6px}
+  .brand p{margin:0;font-size:12px;color:var(--muted)}
+
+  main{
+    padding:14px;
+    max-width:900px;
+    margin: 18px auto 110px;
+  }
+
+  /* --- Menu cards --- */
+  .section{
+    margin-bottom:18px;
+  }
+  .section h2{
+    margin:0 0 10px 0;
+    font-size:16px;
+    display:flex;
+    align-items:center;
+    gap:.6rem;
+  }
+  .items{
+    display:grid;
+    grid-template-columns: 1fr 1fr;
+    gap:10px;
+  }
+  @media (max-width:640px){
+    .items{grid-template-columns: 1fr;}
+    header{padding:.75rem}
+    .brand h1{font-size:14px}
+  }
+
+  .card{
+    background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));
+    border-radius:var(--card-radius);
+    padding:10px;
+    box-shadow:var(--shadow);
+    display:flex;
+    gap:10px;
+    align-items:center;
+    border:1px solid rgba(255,255,255,0.03);
+  }
+  .thumb{
+    width:92px;
+    height:72px;
+    flex:0 0 92px;
+    border-radius:10px;
+    overflow:hidden;
+    background:linear-gradient(135deg, rgba(255,255,255,0.02), rgba(0,0,0,0.05));
+    display:flex;
+    align-items:center;
+    justify-content:center;
+  }
+  .thumb img{width:100%;height:100%;object-fit:cover;display:block}
+
+  .meta{
+    flex:1;
+    min-width:0;
+  }
+  .meta h3{margin:0;font-size:14px}
+  .meta p{margin:6px 0 0 0;font-size:12px;color:var(--muted);line-height:1.15}
+
+  .controls{
+    display:flex;
+    flex-direction:column;
+    gap:8px;
+    align-items:flex-end;
+  }
+  .qty{
+    display:flex;
+    align-items:center;
+    gap:6px;
+    background:var(--glass);
+    padding:4px;
+    border-radius:10px;
+  }
+  .qty button{
+    border:0;background:transparent;color:var(--text);font-size:18px;padding:6px;border-radius:8px;
+  }
+  .qty input{
+    width:42px;text-align:center;border:0;background:transparent;color:var(--text);font-size:14px;
+  }
+  .select{
+    display:flex;
+    align-items:center;
+    gap:8px;
+    font-size:13px;
+  }
+  .select input[type="checkbox"]{
+    width:20px;height:20px;appearance:none;border-radius:6px;border:2px solid rgba(255,255,255,0.08);
+    background:linear-gradient(180deg, rgba(0,0,0,0.25), rgba(255,255,255,0.01));
+    display:inline-block;vertical-align:middle;
+  }
+  .select input[type="checkbox"]:checked{
+    background:linear-gradient(180deg,var(--neon), var(--green));
+    border-color: rgba(0,0,0,0.25);
+    box-shadow: 0 6px 18px rgba(40,255,120,0.08);
+  }
+
+  /* --- Floating send bar --- */
+  .send-bar{
+    position:fixed;
+    left:50%;
+    transform:translateX(-50%);
+    bottom:16px;
+    z-index:30;
+    width:calc(100% - 28px);
+    max-width:920px;
+    display:flex;
+    justify-content:center;
+    pointer-events:auto;
+  }
+  .send-card{
+    width:100%;
+    background:linear-gradient(180deg, rgba(3,3,3,0.9), rgba(6,6,6,0.95));
+    border-radius:16px;
+    padding:10px 12px;
+    box-shadow:0 12px 30px rgba(0,0,0,0.6);
+    display:flex;
+    align-items:center;
+    gap:10px;
+    border:1px solid rgba(255,255,255,0.03);
+  }
+  .summary{
+    flex:1;
+    min-width:0;
+  }
+  .summary p{margin:0;font-size:13px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .send-btn{
+    background:linear-gradient(90deg,var(--neon),var(--green));
+    border:none;
+    padding:10px 14px;
+    border-radius:12px;
+    display:flex;
+    align-items:center;
+    gap:8px;
+    font-weight:700;
+    color:#061203;
+    font-size:15px;
+    box-shadow:0 8px 26px rgba(46,255,130,0.12);
+  }
+  .send-btn svg{width:18px;height:18px;display:block}
+
+  /* small helper */
+  .small{font-size:12px;color:var(--muted)}
+
+  /* footer (contact) */
+  footer{
+    padding:20px;
+    text-align:center;
+    color:var(--muted);
+    font-size:13px;
+    border-top:1px solid rgba(255,255,255,0.02);
+    position:relative;
+    margin-top:40px;
+  }
+
+  /* subtle pulse for CTA on load */
+  .send-btn.pulse{
+    animation: pulseGlow 2.6s infinite;
+  }
+  @keyframes pulseGlow{
+    0%{ box-shadow:0 8px 26px rgba(46,255,130,0.06) }
+    50%{ box-shadow:0 14px 40px rgba(46,255,130,0.14) }
+    100%{ box-shadow:0 8px 26px rgba(46,255,130,0.06) }
+  }
+
+</style>
+</head>
+<body>
+  <div class="bg-eyes" aria-hidden="true">
+    <div class="eye" style="left:22%; top:40%; width:70vmax; height:70vmax;"></div>
+    <div class="eye" style="left:78%; top:60%; width:56vmax; height:56vmax; opacity:0.12;"></div>
+  </div>
+
+  <header>
+    <div class="logo" aria-hidden="true">
+      <div class="mark">C</div>
+      <div class="brand">
+        <h1>CHIMUELO</h1>
+        <p>BAR</p>
+      </div>
+    </div>
+    <div style="margin-left:auto" class="small">••</div>
+  </header>
+
+  <main id="menu">
+
+    <!-- ---------- PICADAS ---------- -->
+    <section class="section" id="picadas">
+      <h2>🍽️ Picadas</h2>
+      <div class="items">
+        <article class="card" data-name="Picada para 2">
+          <div class="thumb"><img src="images/picada_2.jpg" alt="Picada para 2 (placeholder)"></div>
+          <div class="meta">
+            <h3>Picada para 2</h3>
+            <p>Papas, salsas a elección, pollo empanado, bastones de muzarella, milanesa de carne.</p>
+          </div>
+          <div class="controls">
+            <label class="select"><input type="checkbox" class="item-checkbox" /> Seleccionar</label>
+            <div class="qty" aria-hidden="true">
+              <button class="dec">−</button>
+              <input type="number" class="qty-input" min="1" value="1" />
+              <button class="inc">+</button>
+            </div>
+          </div>
+        </article>
+
+        <article class="card" data-name="Picada para 4">
+          <div class="thumb"><img src="images/picada_4.jpg" alt="Picada para 4 (placeholder)"></div>
+          <div class="meta">
+            <h3>Picada para 4</h3>
+            <p>Papas, pollo empanado, bastones de muzarella, milanesa de carne, aros de cebolla.</p>
+          </div>
+          <div class="controls">
+            <label class="select"><input type="checkbox" class="item-checkbox" /> Seleccionar</label>
+            <div class="qty">
+              <button class="dec">−</button>
+              <input type="number" class="qty-input" min="1" value="1" />
+              <button class="inc">+</button>
+            </div>
+          </div>
+        </article>
+      </div>
+    </section>
+
+    <!-- ---------- MILANESAS ---------- -->
+    <section class="section" id="milanesas">
+      <h2>🍛 Milanesas</h2>
+      <div class="items">
+        <article class="card" data-name="Milanesa Napolitana">
+          <div class="thumb"><img src="images/mila_napo.jpg" alt="Milanesa Napolitana (placeholder)"></div>
+          <div class="meta">
+            <h3>Milanesa napolitana</h3>
+            <p>Milanesa de carne, salsas, jamón, queso, papas y ensalada.</p>
+          </div>
+          <div class="controls">
+            <label class="select"><input type="checkbox" class="item-checkbox" /> Seleccionar</label>
+            <div class="qty">
+              <button class="dec">−</button>
+              <input type="number" class="qty-input" min="1" value="1" />
+              <button class="inc">+</button>
+            </div>
+          </div>
+        </article>
+
+        <article class="card" data-name="Milanesa Cheddar">
+          <div class="thumb"><img src="images/mila_cheddar.jpg" alt="Milanesa Cheddar (placeholder)"></div>
+          <div class="meta">
+            <h3>Milanesa de cheddar</h3>
+            <p>Milanesa de carne, salsa cheddar, papas y ensalada.</p>
+          </div>
+          <div class="controls">
+            <label class="select"><input type="checkbox" class="item-checkbox" /> Seleccionar</label>
+            <div class="qty">
+              <button class="dec">−</button>
+              <input type="number" class="qty-input" min="1" value="1" />
+              <button class="inc">+</button>
+            </div>
+          </div>
+        </article>
+
+        <article class="card" data-name="Milanesa Champi">
+          <div class="thumb"><img src="images/mila_champi.jpg" alt="Milanesa Champi (placeholder)"></div>
+          <div class="meta">
+            <h3>Milanesa champi</h3>
+            <p>Milanesa de carne, salsa champi, papas y ensalada.</p>
+          </div>
+          <div class="controls">
+            <label class="select"><input type="checkbox" class="item-checkbox" /> Seleccionar</label>
+            <div class="qty">
+              <button class="dec">−</button>
+              <input type="number" class="qty-input" min="1" value="1" />
+              <button class="inc">+</button>
+            </div>
+          </div>
+        </article>
+
+      </div>
+    </section>
+
+    <!-- ---------- HAMBURGUESAS ---------- -->
+    <section class="section" id="hamburguesas">
+      <h2>🍔 Hamburguesas</h2>
+      <div class="items">
+        <article class="card" data-name="Hamburguesa clásica">
+          <div class="thumb"><img src="images/hamb_classica.jpg" alt="Hamburguesa clásica (placeholder)"></div>
+          <div class="meta"><h3>Hamburguesa clásica</h3><p>Clásica, con lechuga, tomate y nuestra salsa especial.</p></div>
+          <div class="controls">
+            <label class="select"><input type="checkbox" class="item-checkbox" /> Seleccionar</label>
+            <div class="qty"><button class="dec">−</button><input type="number" class="qty-input" min="1" value="1"/><button class="inc">+</button></div>
+          </div>
+        </article>
+
+        <article class="card" data-name="Hamburguesa cheddar">
+          <div class="thumb"><img src="images/hamb_cheddar.jpg" alt="Hamburguesa cheddar (placeholder)"></div>
+          <div class="meta"><h3>Hamburguesa cheddar</h3><p>Con queso cheddar.</p></div>
+          <div class="controls">
+            <label class="select"><input type="checkbox" class="item-checkbox" /> Seleccionar</label>
+            <div class="qty"><button class="dec">−</button><input type="number" class="qty-input" min="1" value="1"/><button class="inc">+</button></div>
+          </div>
+        </article>
+
+        <article class="card" data-name="Hamburguesa panceta">
+          <div class="thumb"><img src="images/hamb_panceta.jpg" alt="Hamburguesa panceta (placeholder)"></div>
+          <div class="meta"><h3>Hamburguesa panceta</h3><p>Con panceta.</p></div>
+          <div class="controls">
+            <label class="select"><input type="checkbox" class="item-checkbox" /> Seleccionar</label>
+            <div class="qty"><button class="dec">−</button><input type="number" class="qty-input" min="1" value="1"/><button class="inc">+</button></div>
+          </div>
+        </article>
+
+        <article class="card" data-name="Hamburguesa de la casa">
+          <div class="thumb"><img src="images/hamb_casa.jpg" alt="Hamburguesa de la casa (placeholder)"></div>
+          <div class="meta"><h3>Hamburguesa de la casa</h3><p>Nuestra receta especial.</p></div>
+          <div class="controls">
+            <label class="select"><input type="checkbox" class="item-checkbox" /> Seleccionar</label>
+            <div class="qty"><button class="dec">−</button><input type="number" class="qty-input" min="1" value="1"/><button class="inc">+</button></div>
+          </div>
+        </article>
+
+      </div>
+    </section>
+
+    <!-- ---------- PIZZAS ---------- -->
+    <section class="section" id="pizzas">
+      <h2>🍕 Pizzas</h2>
+      <div class="items">
+        <article class="card" data-name="Muzarella clásica"><div class="thumb"><img src="images/pizza_muzarella.jpg" alt="Muzarella"></div><div class="meta"><h3>Muzarella clásica</h3><p>Clásica y reconfortante.</p></div><div class="controls"><label class="select"><input type="checkbox" class="item-checkbox" /> Seleccionar</label><div class="qty"><button class="dec">−</button><input class="qty-input" min="1" value="1" type="number"/><button class="inc">+</button></div></div></article>
+
+        <article class="card" data-name="Fugazzeta"><div class="thumb"><img src="images/pizza_fugazzeta.jpg" alt="Fugazzeta"></div><div class="meta"><h3>Fugazzeta</h3><p>Con cebolla y mucho queso.</p></div><div class="controls"><label class="select"><input type="checkbox" class="item-checkbox" /> Seleccionar</label><div class="qty"><button class="dec">−</button><input class="qty-input" min="1" value="1" type="number"/><button class="inc">+</button></div></div></article>
+
+        <article class="card" data-name="Calabresa"><div class="thumb"><img src="images/pizza_calabresa.jpg" alt="Calabresa"></div><div class="meta"><h3>Calabresa</h3><p>Con rodajas de calabresa.</p></div><div class="controls"><label class="select"><input type="checkbox" class="item-checkbox" /> Seleccionar</label><div class="qty"><button class="dec">−</button><input class="qty-input" min="1" value="1" type="number"/><button class="inc">+</button></div></div></article>
+
+        <article class="card" data-name="Panceta"><div class="thumb"><img src="images/pizza_panceta.jpg" alt="Panceta"></div><div class="meta"><h3>Panceta</h3><p>Panceta crocante y mucho queso.</p></div><div class="controls"><label class="select"><input type="checkbox" class="item-checkbox" /> Seleccionar</label><div class="qty"><button class="dec">−</button><input class="qty-input" min="1" value="1" type="number"/><button class="inc">+</button></div></div></article>
+
+        <article class="card" data-name="Capresse"><div class="thumb"><img src="images/pizza_caprese.jpg" alt="Caprese"></div><div class="meta"><h3>Caprese</h3><p>Tomate, mozzarella y albahaca.</p></div><div class="controls"><label class="select"><input type="checkbox" class="item-checkbox" /> Seleccionar</label><div class="qty"><button class="dec">−</button><input class="qty-input" min="1" value="1" type="number"/><button class="inc">+</button></div></div></article>
+
+        <article class="card" data-name="Americana"><div class="thumb"><img src="images/pizza_americana.jpg" alt="Americana"></div><div class="meta"><h3>Americana</h3><p>Combinación clásica con pepperoni.</p></div><div class="controls"><label class="select"><input type="checkbox" class="item-checkbox" /> Seleccionar</label><div class="qty"><button class="dec">−</button><input class="qty-input" min="1" value="1" type="number"/><button class="inc">+</button></div></div></article>
+      </div>
+    </section>
+
+    <!-- ---------- TRAGOS ---------- -->
+    <section class="section" id="tragos">
+      <h2>🍹 Tragos</h2>
+      <div class="items">
+        <!-- list of drinks as compact cards -->
+        <article class="card" data-name="Mojito"><div class="thumb"><img src="images/trago_mojito.jpg" alt="Mojito"></div><div class="meta"><h3>Mojito</h3><p></p></div><div class="controls"><label class="select"><input type="checkbox" class="item-checkbox" /></label><div class="qty"><button class="dec">−</button><input class="qty-input" min="1" value="1" type="number"/><button class="inc">+</button></div></div></article>
+
+        <article class="card" data-name="Gin tonic"><div class="thumb"><img src="images/trago_gintonic.jpg" alt="Gin Tonic"></div><div class="meta"><h3>Gin tonic</h3></div><div class="controls"><label class="select"><input type="checkbox" class="item-checkbox" /></label><div class="qty"><button class="dec">−</button><input class="qty-input" min="1" value="1" type="number"/><button class="inc">+</button></div></div></article>
+
+        <article class="card" data-name="Aperol"><div class="thumb"><img src="images/trago_aperol.jpg" alt="Aperol"></div><div class="meta"><h3>Aperol</h3></div><div class="controls"><label class="select"><input type="checkbox" class="item-checkbox" /></label><div class="qty"><button class="dec">−</button><input class="qty-input" min="1" value="1" type="number"/><button class="inc">+</button></div></div></article>
+
+        <article class="card" data-name="Campari"><div class="thumb"><img src="images/trago_campari.jpg" alt="Campari"></div><div class="meta"><h3>Campari</h3></div><div class="controls"><label class="select"><input type="checkbox" class="item-checkbox" /></label><div class="qty"><button class="dec">−</button><input class="qty-input" min="1" value="1" type="number"/><button class="inc">+</button></div></div></article>
+
+        <article class="card" data-name="Fernet con coca"><div class="thumb"><img src="images/trago_fernet.jpg" alt="Fernet con coca"></div><div class="meta"><h3>Fernet con coca</h3></div><div class="controls"><label class="select"><input type="checkbox" class="item-checkbox" /></label><div class="qty"><button class="dec">−</button><input class="qty-input" min="1" value="1" type="number"/><button class="inc">+</button></div></div></article>
+
+        <article class="card" data-name="Caipirinha"><div class="thumb"><img src="images/trago_caipirinha.jpg" alt="Caipirinha"></div><div class="meta"><h3>Caipirinha</h3></div><div class="controls"><label class="select"><input type="checkbox" class="item-checkbox" /></label><div class="qty"><button class="dec">−</button><input class="qty-input" min="1" value="1" type="number"/><button class="inc">+</button></div></div></article>
+
+        <article class="card" data-name="Copa de vino"><div class="thumb"><img src="images/trago_vino.jpg" alt="Copa de vino"></div><div class="meta"><h3>Copa de vino / botella</h3></div><div class="controls"><label class="select"><input type="checkbox" class="item-checkbox" /></label><div class="qty"><button class="dec">−</button><input class="qty-input" min="1" value="1" type="number"/><button class="inc">+</button></div></div></article>
+
+        <article class="card" data-name="Agua saborizada"><div class="thumb"><img src="images/agua_sabor.jpg" alt="Agua saborizada"></div><div class="meta"><h3>Agua saborizada</h3></div><div class="controls"><label class="select"><input type="checkbox" class="item-checkbox" /></label><div class="qty"><button class="dec">−</button><input class="qty-input" min="1" value="1" type="number"/><button class="inc">+</button></div></div></article>
+
+        <article class="card" data-name="Jäger"><div class="thumb"><img src="images/jager.jpg" alt="Jäger"></div><div class="meta"><h3>Jäger</h3></div><div class="controls"><label class="select"><input type="checkbox" class="item-checkbox" /></label><div class="qty"><button class="dec">−</button><input class="qty-input" min="1" value="1" type="number"/><button class="inc">+</button></div></div></article>
+
+        <article class="card" data-name="Whisky"><div class="thumb"><img src="images/whisky.jpg" alt="Whisky"></div><div class="meta"><h3>Whisky</h3></div><div class="controls"><label class="select"><input type="checkbox" class="item-checkbox" /></label><div class="qty"><button class="dec">−</button><input class="qty-input" min="1" value="1" type="number"/><button class="inc">+</button></div></div></article>
+
+        <article class="card" data-name="Ron"><div class="thumb"><img src="images/ron.jpg" alt="Ron"></div><div class="meta"><h3>Ron</h3></div><div class="controls"><label class="select"><input type="checkbox" class="item-checkbox" /></label><div class="qty"><button class="dec">−</button><input class="qty-input" min="1" value="1" type="number"/><button class="inc">+</button></div></div></article>
+
+        <article class="card" data-name="Grappa"><div class="thumb"><img src="images/grappa.jpg" alt="Grappa"></div><div class="meta"><h3>Grappa</h3></div><div class="controls"><label class="select"><input type="checkbox" class="item-checkbox" /></label><div class="qty"><button class="dec">−</button><input class="qty-input" min="1" value="1" type="number"/><button class="inc">+</button></div></div></article>
+
+        <article class="card" data-name="Wiscola"><div class="thumb"><img src="images/wiscola.jpg" alt="Wiscola"></div><div class="meta"><h3>Wiscola</h3></div><div class="controls"><label class="select"><input type="checkbox" class="item-checkbox" /></label><div class="qty"><button class="dec">−</button><input class="qty-input" min="1" value="1" type="number"/><button class="inc">+</button></div></div></article>
+
+      </div>
+    </section>
+
+    <!-- ---------- POSTRES ---------- -->
+    <section class="section" id="postres">
+      <h2>🍰 Postres</h2>
+      <div class="items">
+        <article class="card" data-name="Flan casero con dulce o crema"><div class="thumb"><img src="images/flan.jpg" alt="Flan casero"></div><div class="meta"><h3>Flan casero</h3><p>Con dulce o crema.</p></div><div class="controls"><label class="select"><input type="checkbox" class="item-checkbox" /></label><div class="qty"><button class="dec">−</button><input class="qty-input" min="1" value="1" type="number"/><button class="inc">+</button></div></div></article>
+
+        <article class="card" data-name="Cheesecake de chocolate"><div class="thumb"><img src="images/cheesecake.jpg" alt="Cheesecake"></div><div class="meta"><h3>Cheesecake de chocolate</h3></div><div class="controls"><label class="select"><input type="checkbox" class="item-checkbox" /></label><div class="qty"><button class="dec">−</button><input class="qty-input" min="1" value="1" type="number"/><button class="inc">+</button></div></div></article>
+
+        <article class="card" data-name="Tiramisú casero"><div class="thumb"><img src="images/tiramisu.jpg" alt="Tiramisú"></div><div class="meta"><h3>Tiramisú casero</h3></div><div class="controls"><label class="select"><input type="checkbox" class="item-checkbox" /></label><div class="qty"><button class="dec">−</button><input class="qty-input" min="1" value="1" type="number"/><button class="inc">+</button></div></div></article>
+
+        <article class="card" data-name="Minis postres en vasitos"><div class="thumb"><img src="images/minis_postres.jpg" alt="Minis postres"></div><div class="meta"><h3>Minis postres en vasitos</h3></div><div class="controls"><label class="select"><input type="checkbox" class="item-checkbox" /></label><div class="qty"><button class="dec">−</button><input class="qty-input" min="1" value="1" type="number"/><button class="inc">+</button></div></div></article>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- --- Floating send bar --- -->
+  <div class="send-bar">
+    <div class="send-card" role="region" aria-label="Enviar pedido">
+      <div class="summary">
+        <p id="summaryText">Ningún plato seleccionado</p>
+        <div class="small">Seleccioná los platos y luego presioná "Enviar pedido".</div>
+      </div>
+      <button id="sendBtn" class="send-btn pulse" title="Enviar pedido por WhatsApp">
+        <!-- send icon -->
+        <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M2 21l21-9L2 3v7l15 2-15 2v7z" fill="#061203"/></svg>
+        Enviar pedido
+      </button>
+    </div>
+  </div>
+
+  <footer>
+    <div>Pedidos vía WhatsApp: +598 91 290 479</div>
+    <div style="margin-top:6px" class="small">Reservas y consultas - Chimuelo</div>
+  </footer>
+
+<script>
+(function(){
+  const WA_NUMBER = "59891290479"; // formato wa.me sin + ni espacios
+  const sendBtn = document.getElementById('sendBtn');
+  const summaryText = document.getElementById('summaryText');
+
+  function updateSummary(){
+    const selected = getSelectedItems();
+    if(selected.length === 0){
+      summaryText.textContent = "Ningún plato seleccionado";
+      sendBtn.classList.add('pulse');
+      return;
+    }
+    sendBtn.classList.remove('pulse');
+    const totalItems = selected.reduce((s,i)=>s + i.qty,0);
+    const preview = selected.slice(0,3).map(i=> i.name + (i.qty>1 ? " x"+i.qty : "")).join(' · ');
+    summaryText.textContent = `${totalItems} ítem(s) • ${preview}${selected.length>3 ? ' · ...' : ''}`;
+  }
+
+  function getSelectedItems(){
+    const cards = Array.from(document.querySelectorAll('.card'));
+    const chosen = [];
+    for(const card of cards){
+      const checkbox = card.querySelector('.item-checkbox');
+      if(!checkbox) continue;
+      if(checkbox.checked){
+        const name = card.dataset.name || card.querySelector('h3')?.textContent || "Item";
+        const qtyInput = card.querySelector('.qty-input');
+        let qty = 1;
+        if(qtyInput) qty = Math.max(1, parseInt(qtyInput.value || 1));
+        chosen.push({name, qty});
+      }
+    }
+    return chosen;
+  }
+
+  // quantity controls
+  document.addEventListener('click', function(e){
+    if(e.target.matches('.inc')){
+      const input = e.target.closest('.qty').querySelector('.qty-input');
+      input.value = Math.max(1, parseInt(input.value || 0) + 1);
+      updateSummary();
+    }
+    if(e.target.matches('.dec')){
+      const input = e.target.closest('.qty').querySelector('.qty-input');
+      input.value = Math.max(1, parseInt(input.value || 0) - 1);
+      updateSummary();
+    }
+    if(e.target.matches('.item-checkbox')){
+      // small delay handled by change event below as well
+      setTimeout(updateSummary, 50);
+    }
+  });
+
+  // also update summary when manually changing number
+  document.addEventListener('input', function(e){
+    if(e.target.matches('.qty-input')){
+      if(!e.target.value || parseInt(e.target.value)<1) e.target.value = 1;
+      updateSummary();
+    }
+  });
+
+  // tap send button
+  sendBtn.addEventListener('click', function(){
+    const items = getSelectedItems();
+    if(items.length === 0){
+      alert("No seleccionaste ningún plato. Seleccioná al menos uno para enviar el pedido.");
+      return;
+    }
+
+    // make message text
+    const lines = [];
+    lines.push("📩 *Nuevo pedido desde Chimuelo*");
+    lines.push("");
+    const timestamp = new Date().toLocaleString('es-UY');
+    lines.push("_Hora:_ " + timestamp);
+    lines.push("");
+    lines.push("*Pedido:*");
+    items.forEach(it=>{
+      lines.push(`- ${it.name} x${it.qty}`);
+    });
+    lines.push("");
+    lines.push("📍 * Dirección / Mesa (opcional):*");
+    lines.push("(escribí aquí)");
+    lines.push("");
+    lines.push("Gracias!");
+
+    const text = encodeURIComponent(lines.join("\n"));
+    const waLink = `https://wa.me/${WA_NUMBER}?text=${text}`;
+
+    // open WhatsApp in new tab
+    window.open(waLink, '_blank');
+  });
+
+  // initial summary
+  updateSummary();
+
+  // Accessibility: toggle checkbox when clicking card
+  document.querySelectorAll('.card').forEach(card=>{
+    card.addEventListener('click', function(e){
+      // avoid toggling when clicking on checkbox, buttons, inputs
+      if(e.target.closest('button') || e.target.matches('input') || e.target.closest('.qty')) return;
+      const cb = card.querySelector('.item-checkbox');
+      if(cb){
+        cb.checked = !cb.checked;
+        updateSummary();
+      }
+    });
+  });
+
+  // Allow user to tap anywhere in select label too
+  document.querySelectorAll('.select input[type="checkbox"]').forEach(cb=>{
+    cb.addEventListener('change', updateSummary);
+  });
+
+})();
+</script>
+</body>
+</html>
